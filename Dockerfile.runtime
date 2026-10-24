@@ -1,0 +1,17 @@
+ARG JAR_PATH
+ARG PORT=8080
+
+FROM eclipse-temurin:17-jre
+ARG JAR_PATH
+ARG PORT
+WORKDIR /app
+COPY ${JAR_PATH} app.jar
+EXPOSE ${PORT}
+# JDK17 模块化限制: hessian2 反序列化需访问 java.math.BigInteger 内部字段, 必须 --add-opens
+# 基础设施地址通过环境变量注入: NACOS_ADDR / REDIS_HOST / MYSQL_HOST / MYSQL_PASSWORD / GATEWAY_SECRET
+ENV NACOS_ADDR=nacos \
+    REDIS_HOST=redis \
+    MYSQL_HOST=host.docker.internal \
+    MYSQL_PASSWORD=root \
+    GATEWAY_SECRET=tlive-dev-secret
+ENTRYPOINT ["java", "--add-opens", "java.base/java.lang=ALL-UNNAMED", "--add-opens", "java.base/java.math=ALL-UNNAMED", "-jar", "app.jar"]
